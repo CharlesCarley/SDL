@@ -18,27 +18,16 @@
 # 3. This notice may not be removed or altered from any source distribution.
 # ------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.0)
-project(Template)
+project(SDL)
 
-
-
-
-if (Template_ExternalTarget)
-    set(TargetFolders ${Template_TargetFolders})
-    set(TargetName    ${Template_TargetName})
-    set(TargetGroup   ${Template_TargetGroup})
+if (SDL_ExternalTarget)
+    set(TargetFolders ${SDL_TargetFolders})
+    set(TargetName    ${SDL_TargetName})
+    set(TargetGroup   ${SDL_TargetGroup})
 else()
-    subdirs(CMake)
     set(TargetFolders FALSE)
-    set(TargetName Template)
+    set(TargetName SDL)
     unset(TargetGroup )
 endif()
 
-option(Template_BUILD_TEST "Build the template test program." OFF)
-
-
-subdirs(Source)
-
-if (Template_BUILD_TEST)
-    subdirs(Test)
-endif()
+subdirs(SDL)
