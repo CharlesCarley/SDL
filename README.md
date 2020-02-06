@@ -1,5 +1,7 @@
-# Template
-This is a template repo (insert  description here)
+# SDL
+
+External build module for [SDL](https://www.libsdl.org) (modified to be statically compiled by default).
+
 
 
 ## Building
