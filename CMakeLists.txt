@@ -30,4 +30,6 @@ else()
     unset(TargetGroup )
 endif()
 
+set(SDL_SHARED CACHE BOOL OFF)
+
 subdirs(SDL)
