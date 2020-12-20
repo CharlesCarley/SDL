@@ -776,6 +776,12 @@ GL_SetTextureScaleMode(SDL_Renderer * renderer, SDL_Texture * texture, SDL_Scale
     GL_TextureData *data = (GL_TextureData *) texture->driverdata;
     GLenum glScaleMode = (scaleMode == SDL_ScaleModeNearest) ? GL_NEAREST : GL_LINEAR;
 
+    // XXX Hack... to prevent a crash in Linux .
+    // It's probably my fault by not conditionally initializing OpenGL like I should.
+    // So, For now ....
+    if (!renderdata->glBindTexture || !data || data->texture)
+        return;
+
     renderdata->glEnable(textype);
     renderdata->glBindTexture(textype, data->texture);
     renderdata->glTexParameteri(textype, GL_TEXTURE_MIN_FILTER, glScaleMode);
