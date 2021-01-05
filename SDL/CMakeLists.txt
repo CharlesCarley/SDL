@@ -2109,86 +2109,98 @@ if(SDL_TEST)
   add_subdirectory(test)
 endif()
 
-##### Installation targets #####
-install(TARGETS ${_INSTALL_LIBS} EXPORT SDL2Targets
-  LIBRARY DESTINATION "lib${LIB_SUFFIX}"
-  ARCHIVE DESTINATION "lib${LIB_SUFFIX}"
-  RUNTIME DESTINATION bin)
 
-##### Export files #####
-if (WINDOWS)
-  set(PKG_PREFIX "cmake")
-else ()
-  set(PKG_PREFIX "lib${LIB_SUFFIX}/cmake/SDL2")
-endif ()
+set(DO_INSTALL OFF)
 
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file("${CMAKE_BINARY_DIR}/SDL2ConfigVersion.cmake"
-  VERSION ${SDL_VERSION}
-  COMPATIBILITY AnyNewerVersion
-)
+if(DO_INSTALL)
 
-install(EXPORT SDL2Targets
-  FILE SDL2Targets.cmake
-  NAMESPACE SDL2::
-  DESTINATION ${PKG_PREFIX}
-)
-install(
-  FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/SDL2Config.cmake
-    ${CMAKE_BINARY_DIR}/SDL2ConfigVersion.cmake
-  DESTINATION ${PKG_PREFIX}
-  COMPONENT Devel
-)
+    ##### Installation targets #####
+    
+    install(TARGETS ${_INSTALL_LIBS} EXPORT SDL2Targets
+      LIBRARY DESTINATION "lib${LIB_SUFFIX}"
+      ARCHIVE DESTINATION "lib${LIB_SUFFIX}"
+      RUNTIME DESTINATION bin)
 
-file(GLOB INCLUDE_FILES ${SDL2_SOURCE_DIR}/include/*.h)
-file(GLOB BIN_INCLUDE_FILES ${SDL2_BINARY_DIR}/include/*.h)
-foreach(_FNAME ${BIN_INCLUDE_FILES})
-  get_filename_component(_INCNAME ${_FNAME} NAME)
-  list(REMOVE_ITEM INCLUDE_FILES ${SDL2_SOURCE_DIR}/include/${_INCNAME})
-endforeach()
-list(APPEND INCLUDE_FILES ${BIN_INCLUDE_FILES})
-install(FILES ${INCLUDE_FILES} DESTINATION include/SDL2)
+    ##### Export files #####
+    if (WINDOWS)
+      set(PKG_PREFIX "cmake")
+    else ()
+      set(PKG_PREFIX "lib${LIB_SUFFIX}/cmake/SDL2")
+    endif ()
 
-string(TOUPPER "${CMAKE_BUILD_TYPE}" UPPER_BUILD_TYPE)
-if (UPPER_BUILD_TYPE MATCHES DEBUG)
-  set(SOPOSTFIX "${SDL_CMAKE_DEBUG_POSTFIX}")
-else()
-  set(SOPOSTFIX "")
-endif()
+    include(CMakePackageConfigHelpers)
+    write_basic_package_version_file("${CMAKE_BINARY_DIR}/SDL2ConfigVersion.cmake"
+      VERSION ${SDL_VERSION}
+      COMPATIBILITY AnyNewerVersion
+    )
 
-if(NOT (WINDOWS OR CYGWIN))
-  if(SDL_SHARED)
-    set(SOEXT ${CMAKE_SHARED_LIBRARY_SUFFIX}) # ".so", ".dylib", etc.
-    get_target_property(SONAME SDL2 OUTPUT_NAME)
-    if(NOT ANDROID)
-        install(CODE "
-          execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-            \"lib${SONAME}${SOPOSTFIX}${SOEXT}\" \"libSDL2${SOPOSTFIX}${SOEXT}\"
-            WORKING_DIRECTORY \"${SDL2_BINARY_DIR}\")")
-        install(FILES ${SDL2_BINARY_DIR}/libSDL2${SOPOSTFIX}${SOEXT} DESTINATION "lib${LIB_SUFFIX}")
+    install(EXPORT SDL2Targets
+      FILE SDL2Targets.cmake
+      NAMESPACE SDL2::
+      DESTINATION ${PKG_PREFIX}
+    )
+    install(
+      FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/SDL2Config.cmake
+        ${CMAKE_BINARY_DIR}/SDL2ConfigVersion.cmake
+      DESTINATION ${PKG_PREFIX}
+      COMPONENT Devel
+    )
+
+    file(GLOB INCLUDE_FILES ${SDL2_SOURCE_DIR}/include/*.h)
+    file(GLOB BIN_INCLUDE_FILES ${SDL2_BINARY_DIR}/include/*.h)
+    foreach(_FNAME ${BIN_INCLUDE_FILES})
+      get_filename_component(_INCNAME ${_FNAME} NAME)
+      list(REMOVE_ITEM INCLUDE_FILES ${SDL2_SOURCE_DIR}/include/${_INCNAME})
+    endforeach()
+    list(APPEND INCLUDE_FILES ${BIN_INCLUDE_FILES})
+    install(FILES ${INCLUDE_FILES} DESTINATION include/SDL2)
+
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" UPPER_BUILD_TYPE)
+    if (UPPER_BUILD_TYPE MATCHES DEBUG)
+      set(SOPOSTFIX "${SDL_CMAKE_DEBUG_POSTFIX}")
+    else()
+      set(SOPOSTFIX "")
     endif()
-  endif()
-  if(FREEBSD)
-    # FreeBSD uses ${PREFIX}/libdata/pkgconfig
-    install(FILES ${SDL2_BINARY_DIR}/sdl2.pc DESTINATION "libdata/pkgconfig")
-  else()
-    install(FILES ${SDL2_BINARY_DIR}/sdl2.pc
-      DESTINATION "lib${LIB_SUFFIX}/pkgconfig")
-  endif()
-  install(PROGRAMS ${SDL2_BINARY_DIR}/sdl2-config DESTINATION bin)
-  # TODO: what about the .spec file? Is it only needed for RPM creation?
-  install(FILES "${SDL2_SOURCE_DIR}/sdl2.m4" DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/aclocal")
+
+    if(NOT (WINDOWS OR CYGWIN))
+      if(SDL_SHARED)
+        set(SOEXT ${CMAKE_SHARED_LIBRARY_SUFFIX}) # ".so", ".dylib", etc.
+        get_target_property(SONAME SDL2 OUTPUT_NAME)
+        if(NOT ANDROID)
+            install(CODE "
+              execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+                \"lib${SONAME}${SOPOSTFIX}${SOEXT}\" \"libSDL2${SOPOSTFIX}${SOEXT}\"
+                WORKING_DIRECTORY \"${SDL2_BINARY_DIR}\")")
+            install(FILES ${SDL2_BINARY_DIR}/libSDL2${SOPOSTFIX}${SOEXT} DESTINATION "lib${LIB_SUFFIX}")
+        endif()
+      endif()
+      if(FREEBSD)
+        # FreeBSD uses ${PREFIX}/libdata/pkgconfig
+        install(FILES ${SDL2_BINARY_DIR}/sdl2.pc DESTINATION "libdata/pkgconfig")
+      else()
+        install(FILES ${SDL2_BINARY_DIR}/sdl2.pc
+          DESTINATION "lib${LIB_SUFFIX}/pkgconfig")
+      endif()
+      install(PROGRAMS ${SDL2_BINARY_DIR}/sdl2-config DESTINATION bin)
+      # TODO: what about the .spec file? Is it only needed for RPM creation?
+      install(FILES "${SDL2_SOURCE_DIR}/sdl2.m4" DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/aclocal")
+    endif()
+
+    ##### Uninstall target #####
+
+    if(NOT TARGET uninstall)
+      configure_file(
+          "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+          "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+          IMMEDIATE @ONLY)
+
+      add_custom_target(uninstall
+          COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+    endif()
 endif()
 
-##### Uninstall target #####
-
-if(NOT TARGET uninstall)
-  configure_file(
-      "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-      "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-      IMMEDIATE @ONLY)
-
-  add_custom_target(uninstall
-      COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+if (SDL_FOLDER)
+    set_target_properties(SDL2main    PROPERTIES FOLDER "${SDL_FOLDER}")
+    set_target_properties(SDL2-static PROPERTIES FOLDER "${SDL_FOLDER}")
 endif()
